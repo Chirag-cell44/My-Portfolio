@@ -1,7 +1,11 @@
+import dj_database_url
 from pathlib import Path
 import os
 BASE_DIR=Path(__file__).resolve().parent.parent
-SECRET_KEY=os.getenv("SECRET_KEY","dev-secret-change-me")
+SECRET_KEY = os.environ.get(
+    "SECRET_KEY",
+    "django-development-only-secret-key"
+)
 DEBUG=os.getenv("DEBUG","True").lower()=="true"
 ALLOWED_HOSTS=[x.strip() for x in os.getenv("ALLOWED_HOSTS","127.0.0.1,localhost").split(",") if x.strip()]
 INSTALLED_APPS=["django.contrib.admin","django.contrib.auth","django.contrib.contenttypes","django.contrib.sessions","django.contrib.messages","django.contrib.staticfiles","portfolio_app"]
@@ -12,9 +16,23 @@ WSGI_APPLICATION="portfolio_project.wsgi.application"
 ASGI_APPLICATION="portfolio_project.asgi.application"
 ENGINE=os.getenv("DB_ENGINE","django.db.backends.sqlite3")
 if ENGINE=="django.db.backends.sqlite3":
-    DATABASES={"default":{"ENGINE":ENGINE,"NAME":BASE_DIR/os.getenv("DB_NAME","db.sqlite3")}}
+    DATABASE_URL = os.getenv("DATABASE_URL")
+
+if DATABASE_URL:
+    DATABASES = {
+        "default": dj_database_url.parse(
+            DATABASE_URL,
+            conn_max_age=600,
+            conn_health_checks=True,
+        )
+    }
 else:
-    DATABASES={"default":{"ENGINE":ENGINE,"NAME":os.getenv("DB_NAME",""),"USER":os.getenv("DB_USER",""),"PASSWORD":os.getenv("DB_PASSWORD",""),"HOST":os.getenv("DB_HOST",""),"PORT":os.getenv("DB_PORT","")}}
+    DATABASES = {
+        "default": {
+            "ENGINE": "django.db.backends.sqlite3",
+            "NAME": BASE_DIR / "db.sqlite3",
+        }
+    }
 AUTH_PASSWORD_VALIDATORS=[{"NAME":"django.contrib.auth.password_validation.UserAttributeSimilarityValidator"},{"NAME":"django.contrib.auth.password_validation.MinimumLengthValidator"},{"NAME":"django.contrib.auth.password_validation.CommonPasswordValidator"},{"NAME":"django.contrib.auth.password_validation.NumericPasswordValidator"}]
 LANGUAGE_CODE="en-us"; TIME_ZONE="Asia/Kolkata"; USE_I18N=True; USE_TZ=True
 STATIC_URL="/static/"; STATICFILES_DIRS=[BASE_DIR/"static"]; STATIC_ROOT=BASE_DIR/"staticfiles"; STATICFILES_STORAGE="whitenoise.storage.CompressedManifestStaticFilesStorage"
